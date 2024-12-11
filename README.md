@@ -20,7 +20,7 @@ Administrador de Gastos es una aplicación de escritorio desarrollada en Java qu
 ## 🚀 Instalación
 1. Clone el repositorio:
 ```bash
-git clone [URL del repositorio]
+git clone 
 ```
 
 2. Configure la base de datos:
@@ -80,7 +80,7 @@ Las contribuciones son bienvenidas. Por favor:
 Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
 ## 👥 Autores
-- [Su nombre]
+- Terence
 
 ## 🙏 Agradecimientos
 - JFreeChart por los gráficos
