@@ -20,7 +20,7 @@ Administrador de Gastos es una aplicación de escritorio desarrollada en Java qu
 ## 🚀 Instalación
 1. Clone el repositorio:
 ```bash
-git clone 
+git clone https://github.com/Terence890/administrador-de-gastos.git
 ```
 
 2. Configure la base de datos:
