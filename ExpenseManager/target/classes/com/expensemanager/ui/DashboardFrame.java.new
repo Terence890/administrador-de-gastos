@@ -1,0 +1,157 @@
+    private void editSelectedExpense() {
+        int selectedRow = expenseTable.getSelectedRow();
+        if (selectedRow == -1) return;
+
+        try {
+            int expenseId = (int) tableModel.getValueAt(selectedRow, 0);
+            String category = (String) tableModel.getValueAt(selectedRow, 2);
+            String amountStr = ((String) tableModel.getValueAt(selectedRow, 3)).replace("$", "");
+            String dateStr = (String) tableModel.getValueAt(selectedRow, 1);
+            String description = (String) tableModel.getValueAt(selectedRow, 4);
+
+            // Create edit dialog
+            JDialog editDialog = createEditDialog(expenseId, category, amountStr, dateStr, description);
+            editDialog.setVisible(true);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Error editing expense: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void deleteSelectedExpense() {
+        int selectedRow = expenseTable.getSelectedRow();
+        if (selectedRow == -1) return;
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Are you sure you want to delete this expense?",
+            "Confirm Delete",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                int expenseId = (int) tableModel.getValueAt(selectedRow, 0);
+                expenseDAO.deleteExpense(expenseId, currentUser.getId());
+                loadExpenses();
+                updateCharts();
+                JOptionPane.showMessageDialog(this, "Expense deleted successfully!");
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this,
+                    "Error deleting expense: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void addExpense() {
+        try {
+            BigDecimal amount = new BigDecimal(amountField.getText());
+            LocalDate date = LocalDate.parse(dateField.getText(), dateFormatter);
+            String category = (String) categoryComboBox.getSelectedItem();
+            String description = descriptionField.getText();
+            
+            Expense expense = new Expense(
+                currentUser.getId(),
+                amount,
+                category,
+                date,
+                description
+            );
+            
+            expenseDAO.createExpense(expense);
+            loadExpenses();
+            updateCharts();
+            
+            // Clear form
+            amountField.setText("");
+            dateField.setText(LocalDate.now().format(dateFormatter));
+            descriptionField.setText("");
+            
+            JOptionPane.showMessageDialog(this, messages.getString("expenseAdded"));
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                messages.getString("error") + ": " + ex.getMessage(),
+                messages.getString("error"),
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private JDialog createEditDialog(int expenseId, String category, String amountStr, String dateStr, String description) {
+        JDialog dialog = new JDialog(this, "Edit Expense", true);
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(this);
+
+        // Create form panel
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Category
+        JComboBox<String> editCategoryCombo = new JComboBox<>(CATEGORIES);
+        editCategoryCombo.setSelectedItem(category);
+        addFormField(formPanel, gbc, "category", editCategoryCombo, 0);
+
+        // Amount
+        JTextField editAmountField = new JTextField(amountStr);
+        addFormField(formPanel, gbc, "amount", editAmountField, 1);
+
+        // Date
+        JTextField editDateField = new JTextField(dateStr);
+        addFormField(formPanel, gbc, "date", editDateField, 2);
+
+        // Description
+        JTextField editDescriptionField = new JTextField(description);
+        addFormField(formPanel, gbc, "description", editDescriptionField, 3);
+
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        JButton saveButton = createStyledButton("Save", currentPrimary, "💾");
+        JButton cancelButton = createStyledButton("Cancel", currentDanger, "❌");
+
+        saveButton.addActionListener(e -> {
+            try {
+                BigDecimal amount = new BigDecimal(editAmountField.getText());
+                LocalDate date = LocalDate.parse(editDateField.getText(), dateFormatter);
+                String newCategory = (String) editCategoryCombo.getSelectedItem();
+                String newDescription = editDescriptionField.getText();
+
+                Expense expense = new Expense(
+                    currentUser.getId(),
+                    amount,
+                    newCategory,
+                    date,
+                    newDescription
+                );
+                expense.setId(expenseId);
+
+                expenseDAO.updateExpense(expense);
+                loadExpenses();
+                updateCharts();
+                dialog.dispose();
+                JOptionPane.showMessageDialog(this, "Expense updated successfully!");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                    "Error updating expense: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelButton.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(saveButton);
+        buttonPanel.add(cancelButton);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.pack();
+        
+        return dialog;
+    } 
