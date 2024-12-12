@@ -10,12 +10,16 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.plot.PiePlot3D;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.general.DefaultPieDataset;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.GradientPaint;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -506,16 +510,73 @@ public class DashboardFrame extends JFrame {
             categoryTotals.forEach((category, total) -> 
                 dataset.setValue(category, total.doubleValue()));
             
-            JFreeChart chart = ChartFactory.createPieChart(
+            // Create 3D pie chart
+            JFreeChart chart = ChartFactory.createPieChart3D(
                 "Expenses by Category",
                 dataset,
-                true,
-                true,
-                false
+                true,  // legend
+                true,  // tooltips
+                false  // urls
             );
             
+            // Apply modern styling
+            PiePlot3D plot = (PiePlot3D) chart.getPlot();
+            plot.setBackgroundPaint(Color.WHITE);
+            plot.setOutlineVisible(false);
+            plot.setShadowPaint(null);
+            plot.setLabelBackgroundPaint(new Color(255, 255, 255, 200));
+            plot.setLabelOutlinePaint(null);
+            plot.setLabelShadowPaint(null);
+            plot.setInteriorGap(0.04);
+            plot.setLabelFont(new Font("Segoe UI", Font.PLAIN, 12));
+            plot.setLabelPaint(new Color(44, 62, 80));
+            plot.setDepthFactor(0.15);  // Adjust 3D depth
+            plot.setStartAngle(290);    // Rotate for better 3D view
+            
+            // Modern color scheme with gradients
+            Color[] colors = {
+                new Color(52, 152, 219),  // Blue
+                new Color(46, 204, 113),  // Green
+                new Color(155, 89, 182),  // Purple
+                new Color(52, 73, 94),    // Dark Gray
+                new Color(231, 76, 60),   // Red
+                new Color(241, 196, 15),  // Yellow
+                new Color(230, 126, 34),  // Orange
+                new Color(149, 165, 166)  // Light Gray
+            };
+            
+            int colorIndex = 0;
+            for (String key : dataset.getKeys()) {
+                Color baseColor = colors[colorIndex % colors.length];
+                // Create diagonal gradient for enhanced 3D effect
+                GradientPaint gradient = new GradientPaint(
+                    0, 0, baseColor,
+                    100, 100, baseColor.brighter().brighter()
+                );
+                plot.setSectionPaint(key, gradient);
+                colorIndex++;
+            }
+            
+            // Style the chart title
+            chart.getTitle().setFont(new Font("Segoe UI", Font.BOLD, 16));
+            chart.getTitle().setPaint(new Color(44, 62, 80));
+            
+            // Style the legend
+            LegendTitle legend = chart.getLegend();
+            legend.setBackgroundPaint(Color.WHITE);
+            legend.setItemFont(new Font("Segoe UI", Font.PLAIN, 12));
+            legend.setItemPaint(new Color(44, 62, 80));
+            
+            // Update the chart panel with modern look
             chartPanel.removeAll();
-            chartPanel.add(new ChartPanel(chart), BorderLayout.CENTER);
+            ChartPanel newChartPanel = new ChartPanel(chart) {
+                @Override
+                public Dimension getPreferredSize() {
+                    return new Dimension(400, 300);
+                }
+            };
+            newChartPanel.setBackground(Color.WHITE);
+            chartPanel.add(newChartPanel, BorderLayout.CENTER);
             chartPanel.revalidate();
             chartPanel.repaint();
             
@@ -546,7 +607,7 @@ public class DashboardFrame extends JFrame {
         addFormField(formPanel, gbc, "description", descriptionField, 3);
         
         // Add button
-        JButton addButton = createStyledButton(messages.getString("addNewExpense"), currentPrimary, "➕");
+        JButton addButton = createStyledButton(messages.getString("addNewExpense"), currentPrimary, "💾");
         addButton.addActionListener(e -> addExpense());
         
         gbc.gridx = 0; gbc.gridy = 4;
