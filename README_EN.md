@@ -1,4 +1,4 @@
-### **Expense Manager**  
+# **Expense Manager**  
 📝 **Description**  
 Expense Manager is a desktop application developed in Java that allows users to efficiently manage and track their personal expenses. With an intuitive and modern graphical interface, users can record, edit, and analyze their daily expenses.  
 
